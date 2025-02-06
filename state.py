@@ -91,8 +91,6 @@ class Scene(State):
         self.font = pygame.font.Font("assets/fonts/LexendExa-Regular.ttf", 10)
         self.game.render_text("Stamina:", COLOURS["white"], self.font, (30, y-4))
 
-    
-
     def create_scene(self):
         layers = []
 

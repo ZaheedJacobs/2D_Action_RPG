@@ -61,7 +61,7 @@ class AttackEffect(Effect):
         self.character = character
         self.import_images(f"assets/effects/attack/")
         self.image = self.animations[f"attack_effect_{self.character.get_direction()}"][self.frame_index]
-        self.rect = self.image.get_frect(topleft = (self.x, self.y))
+        self.rect = self.image.get_rect(topleft = (self.x, self.y))
         self.mask = pygame.mask.from_surface(self.image)
         self.timer = 0.5
 

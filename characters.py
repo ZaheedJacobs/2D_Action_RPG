@@ -12,7 +12,7 @@ class NPC(pygame.sprite.Sprite):
         self.import_images(f"assets/characters/{self.name}/")
         self.frame_index = 0
         self.image = self.animations["idle_right"][self.frame_index]
-        self.rect = self.image.get_frect(topleft = pos)
+        self.rect = self.image.get_rect(topleft = pos)
         self.mask = pygame.mask.from_surface(self.image)
         self.hitbox = self.rect.copy().inflate(-self.rect.width/2, -self.rect.height/2)
         self.speed = 60
