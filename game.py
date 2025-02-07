@@ -71,6 +71,7 @@ class Game:
 
                 elif event.key in (pygame.K_DOWN, pygame.K_q):
                     INPUTS["q_switch"] = True
+                    # self.running = False
 
                 elif event.key in (pygame.K_DOWN, pygame.K_e):
                     INPUTS["e_switch"] = True

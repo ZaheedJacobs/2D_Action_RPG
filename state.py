@@ -30,14 +30,14 @@ class State:
         pass
 
 class SplashScreen(State):
-    def __init__(self, game):
+    def __init__(self, game, current_scene = "0", entry_point = "0"):
         super().__init__(game)
-        self.current_scene = "0"
-        self.entry_point = "0"
+        self.current_scene = current_scene
+        self.entry_point = entry_point
     
     def update(self, dt):
         if INPUTS["space"]:
-            Scene(self.game, "0", "0").enter_state()
+            Scene(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
 
     def draw(self, screen):
@@ -70,7 +70,14 @@ class Scene(State):
         self.transition = Transition(self)
 
     def go_to_scene(self):
+        player_stats["x-pos"] = 0
+        player_stats["y-pos"] = 0
         Scene(self.game, self.new_scene, self.entry_point).enter_state()
+
+    def go_to_splashscreen(self):
+        if INPUTS["space"]:
+            SplashScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
 
     def draw_health_bar(self, health, x, y, screen):
         # ratio = health / 100
@@ -108,7 +115,11 @@ class Scene(State):
         if "entries" in layers:
             for obj in self.tmx_data.get_layer_by_name("entries"):
                 if obj.name == self.entry_point:
-                    self.player = Player(self.game, self, [self.update_sprites, self.drawn_sprites, self.player_sprites], (obj.x, obj.y), "blocks" ,"player")
+                    if player_stats["x-pos"] != 0 or player_stats["y-pos"] != 0:
+                        self.pos = (player_stats["x-pos"], player_stats["y-pos"])
+                    else:
+                        self.pos = (obj.x, obj.y)
+                    self.player = Player(self.game, self, [self.update_sprites, self.drawn_sprites, self.player_sprites], self.pos, "blocks" ,"player")
                     self.target = self.player
                     
                     self.camera.offset = vec(self.player.rect.centerx - WIDTH/2, self.player.rect.centery - HEIGHT/2)
@@ -147,10 +158,10 @@ class Scene(State):
         self.player.draw_bar(10, 215, self.player.stamina, self.player.max_stamina, COLOURS["black"], COLOURS["orange"])
         self.draw_health_bar(self.player.health, 10, 200, screen)
         self.draw_stamina_bar(self.player.stamina, 10, 215, screen)
+        self.go_to_splashscreen()
 
-        # self.debugger([
-        #                 str("FPS: " + str(round(self.game.clock.get_fps(), 2))),
-        #                 str("Velocity: " + str(round(self.player.vel, 2))),
-        #                 str("State: " + str(self.player.state)),
-        #                 str("Target stamina: " + str(self.player.target_stamina))
-        # ])
+        self.debugger([
+                        str("FPS: " + str(round(self.game.clock.get_fps(), 2))),
+                        str("Velocity: " + str(round(self.player.vel, 2))),
+                        str("Position: " + str((player_stats["x-pos"], player_stats["y-pos"])))
+        ])

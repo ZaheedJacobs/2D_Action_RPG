@@ -48,7 +48,9 @@ player_stats = {"Health": 0,
                 "Dexterity": 0,
                 "Agility": 0,
                 "Intellect": 0,
-                "Vitality": 0}
+                "Vitality": 0,
+                "x-pos" : 0,
+                "y-pos" : 0}
 
 enemy_stats = {"Health": 0,
                "Damage": 0,

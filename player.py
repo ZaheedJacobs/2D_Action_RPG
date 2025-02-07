@@ -20,9 +20,9 @@ class Player(NPC):
         self.is_alive = True
         self.change_speed = 10
         
-        self.stats = player_stats.copy()
-        self.equipment = equipment.copy()
-        self.inventory = inventory.copy()
+        self.stats = player_stats
+        self.equipment = equipment
+        self.inventory = inventory
 
         self.setup_stats()
 
@@ -39,6 +39,9 @@ class Player(NPC):
         if INPUTS["up"]: self.acc.y = -self.force
         elif INPUTS["down"]: self.acc.y = self.force
         else: self.acc.y = 0
+
+        player_stats["x-pos"] = self.rect.centerx
+        player_stats["y-pos"] = self.rect.centery
 
     def vec_to_mouse(self, speed):
         direction = vec(pygame.mouse.get_pos()) - (vec(self.rect.center) - vec(self.scene.camera.offset))
