@@ -69,12 +69,18 @@ class Game:
                 elif event.key in (pygame.K_DOWN, pygame.K_s):
                     INPUTS["down"] = True
 
-                elif event.key in (pygame.K_DOWN, pygame.K_q):
-                    INPUTS["q_switch"] = True
+                elif event.key == pygame.K_q:
+                    INPUTS["q_press"] = True
                     # self.running = False
 
-                elif event.key in (pygame.K_DOWN, pygame.K_e):
-                    INPUTS["e_switch"] = True
+                elif event.key == pygame.K_e:
+                    INPUTS["e_press"] = True
+
+                elif event.key == pygame.K_r:
+                    INPUTS["r_press"] = True
+                
+                elif event.key == pygame.K_m:
+                    INPUTS["m_press"] = True
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
@@ -92,11 +98,17 @@ class Game:
                 elif event.key in (pygame.K_DOWN, pygame.K_s):
                     INPUTS["down"] = False
                 
-                elif event.key in (pygame.K_DOWN, pygame.K_q):
-                    INPUTS["q_switch"] = False
+                elif event.key == pygame.K_q:
+                    INPUTS["q_press"] = False
                 
-                elif event.key in (pygame.K_DOWN, pygame.K_e):
-                    INPUTS["e_switch"] = False
+                elif event.key == pygame.K_e:
+                    INPUTS["e_press"] = False
+
+                elif event.key  == pygame.K_r:
+                    INPUTS["r_press"] = False
+
+                elif event.key == pygame.K_m:
+                    INPUTS["m_press"] = False
             
             if event.type == pygame.MOUSEWHEEL:
                 if event.y == 1:

@@ -9,6 +9,8 @@ from transition import Transition
 from pytmx.util_pygame import load_pygame
 from objects import Object, Wall, Collider
 from ui.bar import Bar
+from label import Label
+from ui.button import Button
 
 class State:
     def __init__(self, game):
@@ -45,14 +47,50 @@ class SplashScreen(State):
         self.game.render_text("Splash Screen, press space", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/2))
 
 class MainMenu(SplashScreen):
-    def __init__(self, game, current_scene="0", entry_point="0"):
+    def __init__(self, game, current_scene = "0", entry_point = "0"):
         super().__init__(game, current_scene, entry_point)
+        self.button_font = "assets/fonts/Almendra-Regular.ttf"
+        self.new_game_button = Button(160, 100, 20, 20, COLOURS["white"], COLOURS["black"], "New Game", self.button_font, 16)
+        self.continue_button = Button(160, 130, 20, 20, COLOURS["white"], COLOURS["black"], "Continue", self.button_font, 16)
+        self.quit_game_button = Button(160, 160, 20, 20, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
+
+    def reset_player_stats(self):
+        global player_stats
+        # new_stats = {}
+        for stat, num in player_stats.items():
+            if stat != "Level":
+                player_stats[stat] = 0
+
+        player_stats["Level"] = 1
 
     def update(self, dt):
-        pass
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_pressed = pygame.mouse.get_pressed()
+        
+        if self.new_game_button.is_pressed(mouse_pos, mouse_pressed):
+            self.current_scene = "0"
+            self.entry_point = "0"
+            self.reset_player_stats()
+            Scene(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
+        
+        elif self.continue_button.is_pressed(mouse_pos, mouse_pressed):
+            Scene(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
+
+        elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed):
+            self.game.running = False
+        
+        # if INPUTS["space"]:
+        #     Scene(self.game, self.current_scene, self.entry_point).enter_state()
+        #     self.game.reset_inputs()
 
     def draw(self, screen):
-        pass
+        screen.fill(COLOURS["black"])
+        self.game.render_text("Menu Screen", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/4))
+        self.new_game_button.draw(screen)
+        self.quit_game_button.draw(screen)
+        self.continue_button.draw(screen)
 
 class Scene(State):
     def __init__(self, game, current_scene, entry_point):
@@ -89,6 +127,11 @@ class Scene(State):
     def go_to_splashscreen(self):
         if INPUTS["space"]:
             SplashScreen(self.game, map_data["scene_num"], map_data["entry_point_num"]).enter_state()
+            self.game.reset_inputs()
+    
+    def go_to_menu_screen(self):
+        if INPUTS["m_press"]:
+            MainMenu(self.game, map_data["scene_num"], map_data["entry_point_num"]).enter_state()
             self.game.reset_inputs()
 
     def draw_health_bar(self, health, x, y, screen):
@@ -172,6 +215,7 @@ class Scene(State):
         self.draw_health_bar(self.player.health, 10, 200, screen)
         self.draw_stamina_bar(self.player.stamina, 10, 215, screen)
         self.go_to_splashscreen()
+        self.go_to_menu_screen()
 
         self.debugger([
                         str("FPS: " + str(round(self.game.clock.get_fps(), 2))),

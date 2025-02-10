@@ -14,8 +14,10 @@ INPUTS = {'escape': False,
           'right_click': False,
           'scroll_up': False,
           'scroll_down': False,
-          'q_switch': False,
-          'e_switch': False
+          'q_press': False,
+          'e_press': False,
+          'r_press': False,
+          'm_press': False
           }
 
 COLOURS = {"black": (0, 0, 0), 
