@@ -46,8 +46,7 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-                pygame.quit()
-                sys.exit()
+                
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -148,6 +147,9 @@ class Game:
             self.states[-1].draw(self.screen)
             self.custom_cursor(self.screen)
             pygame.display.update()
+        
+        pygame.quit()
+        sys.exit()
 
 if __name__ == "__main__":
     game = Game()
