@@ -52,7 +52,7 @@ player_stats = {"Health": 0,
                 "Intellect": 0,
                 "Vitality": 0,
                 "x-pos" : 0,
-                "y-pos" : 0,
+                "y-pos" : 0
             }
 
 map_data = {"player_direction": "right",

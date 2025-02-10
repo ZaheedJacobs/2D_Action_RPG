@@ -52,7 +52,7 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     INPUTS["escape"] = True
-                    self.running = False
+                    # self.running = False
                 
                 elif event.key == pygame.K_SPACE:
                     INPUTS["space"] = True

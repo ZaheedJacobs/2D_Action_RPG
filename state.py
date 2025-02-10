@@ -74,7 +74,7 @@ class MainMenu(SplashScreen):
             Scene(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
         
-        elif self.continue_button.is_pressed(mouse_pos, mouse_pressed):
+        elif self.continue_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
             Scene(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
 
@@ -130,7 +130,7 @@ class Scene(State):
             self.game.reset_inputs()
     
     def go_to_menu_screen(self):
-        if INPUTS["m_press"]:
+        if INPUTS["escape"]:
             MainMenu(self.game, map_data["scene_num"], map_data["entry_point_num"]).enter_state()
             self.game.reset_inputs()
 
