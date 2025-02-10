@@ -44,6 +44,15 @@ class SplashScreen(State):
         screen.fill(COLOURS["blue"])
         self.game.render_text("Splash Screen, press space", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/2))
 
+class MainMenu(SplashScreen):
+    def __init__(self, game, current_scene="0", entry_point="0"):
+        super().__init__(game, current_scene, entry_point)
+
+    def update(self, dt):
+        pass
+
+    def draw(self, screen):
+        pass
 
 class Scene(State):
     def __init__(self, game, current_scene, entry_point):
@@ -51,6 +60,9 @@ class Scene(State):
 
         self.current_scene = current_scene
         self.entry_point = entry_point
+
+        map_data["scene_num"] = self.current_scene
+        map_data["entry_point_num"] = self.entry_point
 
         self.camera = Camera(self)
         
@@ -76,7 +88,7 @@ class Scene(State):
 
     def go_to_splashscreen(self):
         if INPUTS["space"]:
-            SplashScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            SplashScreen(self.game, map_data["scene_num"], map_data["entry_point_num"]).enter_state()
             self.game.reset_inputs()
 
     def draw_health_bar(self, health, x, y, screen):
@@ -119,7 +131,8 @@ class Scene(State):
                         self.pos = (player_stats["x-pos"], player_stats["y-pos"])
                     else:
                         self.pos = (obj.x, obj.y)
-                    self.player = Player(self.game, self, [self.update_sprites, self.drawn_sprites, self.player_sprites], self.pos, "blocks" ,"player")
+                    # self.player_direction = player_stats["direction"]
+                    self.player = Player(self.game, self, [self.update_sprites, self.drawn_sprites, self.player_sprites], self.pos, "blocks" ,"player", map_data["player_direction"])
                     self.target = self.player
                     
                     self.camera.offset = vec(self.player.rect.centerx - WIDTH/2, self.player.rect.centery - HEIGHT/2)
@@ -131,9 +144,9 @@ class Scene(State):
         if "entities" in layers:
             for obj in self.tmx_data.get_layer_by_name("entities"):
                 if "npc" in obj.name:
-                    self.npc = NPC(self.game, self, [self.update_sprites, self.drawn_sprites, self.npc_sprites], (obj.x, obj.y), "blocks" , obj.name)
+                    self.npc = NPC(self.game, self, [self.update_sprites, self.drawn_sprites, self.npc_sprites], (obj.x, obj.y), "blocks" , obj.name, "right")
                 if "enemy" in obj.name:
-                    self.npc = Enemy(self.game, self, [self.update_sprites, self.drawn_sprites, self.enemy_sprites], (obj.x, obj.y), "blocks" , obj.name)
+                    self.npc = Enemy(self.game, self, [self.update_sprites, self.drawn_sprites, self.enemy_sprites], (obj.x, obj.y), "blocks" , obj.name, "right")
 
 
     def debugger(self, debug_list):
@@ -163,5 +176,6 @@ class Scene(State):
         self.debugger([
                         str("FPS: " + str(round(self.game.clock.get_fps(), 2))),
                         str("Velocity: " + str(round(self.player.vel, 2))),
-                        str("Position: " + str((player_stats["x-pos"], player_stats["y-pos"])))
+                        "Position: " + str((player_stats["x-pos"], player_stats["y-pos"])),
+                        "Direction: " + map_data["player_direction"]
         ])

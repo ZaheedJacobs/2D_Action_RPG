@@ -1,13 +1,14 @@
 import pygame
 from settings import *
-from characters import NPC
+from characters import Entity
 from math_extras import distance
 
-class Enemy(NPC):
-    def __init__(self, game, scene, group, pos, layer, name):
-        super().__init__(game, scene, group, pos, layer, name)
+class Enemy(Entity):
+    def __init__(self, game, scene, group, pos, layer, name, direction):
+        super().__init__(game, scene, group, pos, layer, name, direction)
 
         self.state = Idle(self)
+        # self.image = self.animations[f"idle_{self.direction}"][self.frame_index]
         self.health = 100
         self.max_health = self.health
         self.regen = 0.01

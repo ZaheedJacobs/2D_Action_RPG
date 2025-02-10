@@ -1,13 +1,14 @@
 import pygame
 from settings import *
-from characters import NPC
+from characters import Entity
 from effect import AttackEffect
 
-class Player(NPC):
-    def __init__(self, game, scene, group, pos, layer, name):
-        super().__init__(game, scene, group, pos, layer, name)
+class Player(Entity):
+    def __init__(self, game, scene, group, pos, layer, name, direction):
+        super().__init__(game, scene, group, pos, layer, name, direction)
 
         self.state = Idle(self)
+        # self.image = self.animations[f"idle_{map_data["player_direction"]}"][self.frame_index]
         self.bar_width = 100
         self.health = 100
         self.max_health = 100
@@ -35,12 +36,11 @@ class Player(NPC):
         if INPUTS["left"]: self.acc.x = -self.force
         elif INPUTS["right"]: self.acc.x = self.force
         else: self.acc.x = 0
+        player_stats["x-pos"] = self.rect.centerx
         
         if INPUTS["up"]: self.acc.y = -self.force
         elif INPUTS["down"]: self.acc.y = self.force
         else: self.acc.y = 0
-
-        player_stats["x-pos"] = self.rect.centerx
         player_stats["y-pos"] = self.rect.centery
 
     def vec_to_mouse(self, speed):
@@ -124,6 +124,27 @@ class Player(NPC):
     #         elif self.weapon_type == "single": 
     #             self.weapon_type = "dual"
     #             return
+
+    def get_direction(self):
+        angle = self.vel.angle_to(vec(0, 1))
+        angle = (angle + 360) % 360
+        if 45 <= angle < 135: 
+            map_data["player_direction"] = "right"
+            return map_data["player_direction"]
+            # return "right"
+        elif 135 <= angle < 225: 
+            map_data["player_direction"] = "up"
+            return map_data["player_direction"]
+            # return "up"
+        elif 225 <= angle < 315: 
+            map_data["player_direction"] = "left"
+            return map_data["player_direction"]
+            # return "left"
+        else: 
+            map_data["player_direction"] = "down"
+            return map_data["player_direction"]
+            # return "down"
+        # return player_stats["direction"]
 
     def get_attack_collision(self):
         if self.state == Attack:

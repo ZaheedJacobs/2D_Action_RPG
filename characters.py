@@ -1,17 +1,18 @@
 import pygame
 from settings import *
 
-class NPC(pygame.sprite.Sprite):
-    def __init__(self, game, scene, group, pos, layer, name):
+class Entity(pygame.sprite.Sprite):
+    def __init__(self, game, scene, group, pos, layer, name, direction):
         super().__init__(group)
 
         self.game = game
         self.scene = scene
         self._layer = layer
         self.name = name
+        self.direction = direction
         self.import_images(f"assets/characters/{self.name}/")
         self.frame_index = 0
-        self.image = self.animations["idle_right"][self.frame_index]
+        self.image = self.animations[f"idle_{self.direction}"][self.frame_index]
         self.rect = self.image.get_rect(topleft = pos)
         self.mask = pygame.mask.from_surface(self.image)
         self.hitbox = self.rect.copy().inflate(-self.rect.width/2, -self.rect.height/2)
@@ -82,6 +83,7 @@ class NPC(pygame.sprite.Sprite):
         self.hitbox.centerx += self.vel.x * dt + (self.vel.x / 2)*dt
         self.rect.centerx = self.hitbox.centerx
         self.collision("x", self.scene.block_sprites)
+        self.collision("x", self.scene.npc_sprites)
 
         # y-direction
         self.acc.y += self.vel.y * frict
@@ -89,6 +91,7 @@ class NPC(pygame.sprite.Sprite):
         self.hitbox.centery += self.vel.y * dt + (self.vel.y / 2)*dt
         self.rect.centery = self.hitbox.centery
         self.collision("y", self.scene.block_sprites)
+        self.collision("y", self.scene.npc_sprites)
 
 
         if self.vel.magnitude() >= self.speed:
@@ -104,6 +107,10 @@ class NPC(pygame.sprite.Sprite):
         self.change_state()
         self.state.update(self, dt)
 
+class NPC(Entity):
+    def __init__(self, game, scene, group, pos, layer, name, direction):
+        super().__init__(game, scene, group, pos, layer, name, direction)
+        
 class Idle:
     def __init__(self, character):
         character.frame_index = 0
@@ -130,4 +137,3 @@ class Run:
         character.movement()
         character.physics(dt, character.frict)
 
-    
