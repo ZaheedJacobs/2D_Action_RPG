@@ -36,12 +36,12 @@ class Player(Entity):
         if INPUTS["left"]: self.acc.x = -self.force
         elif INPUTS["right"]: self.acc.x = self.force
         else: self.acc.x = 0
-        player_stats["x-pos"] = self.rect.centerx
+        player_coordinates["x-pos"] = self.rect.centerx
         
         if INPUTS["up"]: self.acc.y = -self.force
         elif INPUTS["down"]: self.acc.y = self.force
         else: self.acc.y = 0
-        player_stats["y-pos"] = self.rect.centery
+        player_coordinates["y-pos"] = self.rect.centery
 
     def vec_to_mouse(self, speed):
         direction = vec(pygame.mouse.get_pos()) - (vec(self.rect.center) - vec(self.scene.camera.offset))
@@ -155,7 +155,6 @@ class Player(Entity):
                             sprite.health -= self.damage
                             sprite.state = Hit()
         
-
     def exit_scene(self):
         for exit in self.scene.exit_sprites:
             if self.hitbox.colliderect(exit.rect):

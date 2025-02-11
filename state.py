@@ -61,6 +61,9 @@ class MainMenu(SplashScreen):
         for stat, num in player_stats.items():
             if stat != "Level":
                 player_stats[stat] = 0
+        
+        for pos, num in player_coordinates.items():
+            player_coordinates[pos] = 0            
 
         player_stats["Level"] = 1
 
@@ -72,7 +75,7 @@ class MainMenu(SplashScreen):
         self.game.reset_inputs()
 
     def load_current_game(self):
-        if (player_stats["x-pos"] == 0 and player_stats["y-pos"] == 0):
+        if (player_coordinates["x-pos"] == 0 and player_coordinates["y-pos"] == 0):
             self.start_new_game()
         else:
             Scene(self.game, self.current_scene, self.entry_point).enter_state()
@@ -85,7 +88,7 @@ class MainMenu(SplashScreen):
         if self.new_game_button.is_pressed(mouse_pos, mouse_pressed):
             self.start_new_game()
         
-        elif self.continue_button.is_pressed(mouse_pos, mouse_pressed):
+        elif self.continue_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
             self.load_current_game()
 
         elif self.help_button.is_pressed(mouse_pos, mouse_pressed):
@@ -93,16 +96,12 @@ class MainMenu(SplashScreen):
             HelpScreen(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
 
-        elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
+        elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed):
             self.game.running = False
 
     def update(self, dt):
         self.check_button_press()
         self.transition.update(dt)
-        
-        # if INPUTS["space"]:
-        #     Scene(self.game, self.current_scene, self.entry_point).enter_state()
-        #     self.game.reset_inputs()
 
     def draw(self, screen):
         screen.fill(COLOURS["blue"])
@@ -181,8 +180,8 @@ class Scene(State):
         self.transition = Transition(self)
 
     def go_to_scene(self):
-        player_stats["x-pos"] = 0
-        player_stats["y-pos"] = 0
+        player_coordinates["x-pos"] = 0
+        player_coordinates["y-pos"] = 0
         Scene(self.game, self.new_scene, self.entry_point).enter_state()
 
     def go_to_splashscreen(self):
@@ -231,8 +230,8 @@ class Scene(State):
         if "entries" in layers:
             for obj in self.tmx_data.get_layer_by_name("entries"):
                 if obj.name == self.entry_point:
-                    if player_stats["x-pos"] != 0 or player_stats["y-pos"] != 0:
-                        self.pos = (player_stats["x-pos"], player_stats["y-pos"])
+                    if player_coordinates["x-pos"] != 0 or player_coordinates["y-pos"] != 0:
+                        self.pos = (player_coordinates["x-pos"], player_coordinates["y-pos"])
                     else:
                         self.pos = (obj.x, obj.y)
                     # self.player_direction = player_stats["direction"]
@@ -280,6 +279,6 @@ class Scene(State):
         self.debugger([
                         str("FPS: " + str(round(self.game.clock.get_fps(), 2))),
                         str("Velocity: " + str(round(self.player.vel, 2))),
-                        "Position: " + str((player_stats["x-pos"], player_stats["y-pos"])),
+                        "Position: " + str((player_coordinates["x-pos"], player_coordinates["y-pos"])),
                         "Direction: " + map_data["player_direction"]
         ])
