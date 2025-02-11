@@ -81,6 +81,12 @@ class Game:
                 elif event.key == pygame.K_m:
                     INPUTS["m_press"] = True
 
+                elif event.key == pygame.K_i:
+                    INPUTS["i_press"] = True
+
+                elif event.key == pygame.K_c:
+                    INPUTS["c_press"] = True
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     INPUTS["space"] = False
@@ -108,6 +114,12 @@ class Game:
 
                 elif event.key == pygame.K_m:
                     INPUTS["m_press"] = False
+
+                elif event.key == pygame.K_i:
+                    INPUTS["i_press"] = False
+
+                elif event.key == pygame.K_c:
+                    INPUTS["c_press"] = False
             
             if event.type == pygame.MOUSEWHEEL:
                 if event.y == 1:

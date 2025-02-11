@@ -134,7 +134,9 @@ class HelpScreen(SplashScreen):
                                 "Right-Arrow/D -> Move Right",
                                 "Left-click -> Attack"
                                 "Right-click -> Dash",
-                                "Escape key -> Open Main menu/Exit menu"
+                                "Escape key -> Open Main menu/Exit menu",
+                                "C -> Open Character Stats Screen",
+                                "I -> Open Inventory Screen"
                             ])
         self.back_button.draw(screen)
         self.transition.draw(screen)
@@ -147,6 +149,34 @@ class HelpScreen(SplashScreen):
             self.transition.exiting = True
             MainMenu(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
+
+    def update(self, dt):
+        self.check_button_press()
+        self.transition.update(dt)
+
+class StatScreen(SplashScreen):
+    def __init__(self, game, current_scene="0", entry_point="0"):
+        super().__init__(game, current_scene, entry_point)
+
+        self.transition = MenuTransition(self)
+
+    def check_button_press(self):
+        if INPUTS["escape"]:
+            self.transition.exiting = True
+            Scene(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
+
+    def show_stats(self):
+        index = 0
+        for stat, num in player_stats.items():
+            self.game.render_text(f"{stat}: {num}", COLOURS["white"], self.game.font, (15, 20 * index), False)
+            index += 1
+
+    def draw(self, screen):
+        screen.fill(COLOURS["blue"])
+        self.transition.draw(screen)
+        if self.transition.exiting == False:
+            self.show_stats()
 
     def update(self, dt):
         self.check_button_press()
@@ -194,22 +224,16 @@ class Scene(State):
             MainMenu(self.game, map_data["scene_num"], map_data["entry_point_num"]).enter_state()
             self.game.reset_inputs()
 
-    def draw_health_bar(self, health, x, y, screen):
-        # ratio = health / 100
-        # health_bar = pygame.Rect(x, y, 100 * ratio, 5)
-        # pygame.draw.rect(screen, COLOURS["black"], (x, y, 100, 5))
-        # pygame.draw.rect(screen, COLOURS["red"], health_bar)
-        
+    def go_to_stats_screen(self):
+        if INPUTS["c_press"]:
+            StatScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
+
+    def draw_health_text(self, x = 30, y = 0):
         self.font = pygame.font.Font("assets/fonts/LexendExa-Regular.ttf", 10)
         self.game.render_text("Health:", COLOURS["white"], self.font, (30, y-4))
 
-    def draw_stamina_bar(self, stamina, x, y, screen):
-        # ratio = stamina / 100
-        # stamina_bar = pygame.Rect(x, y, 100 * ratio, 5)
-        # pygame.draw.rect(screen, COLOURS["black"], (x, y, 100, 5))
-        # pygame.draw.rect(screen, COLOURS["orange"], stamina_bar)
-        # stamina_bar = Bar(x, y, stamina, COLOURS["black"], COLOURS["orange"], 100, 5)
-        # stamina_bar.draw(screen)
+    def draw_stamina_text(self, x = 30, y = 0):
         self.font = pygame.font.Font("assets/fonts/LexendExa-Regular.ttf", 10)
         self.game.render_text("Stamina:", COLOURS["white"], self.font, (30, y-4))
 
@@ -263,18 +287,17 @@ class Scene(State):
     def draw(self, screen):
         self.camera.draw(screen, self.drawn_sprites)
         self.transition.draw(screen)
-        # health_bar = Bar(10, 200, self.player.health, self.player.max_health, self.player.target_health, self.player.health_regen, COLOURS["black"], COLOURS["red"], 100, 5)
-        # health_bar.draw(screen)
-        # stamina_bar = Bar(10, 215, self.player.stamina, self.player.max_stamina, self.player.target_stamina, self.player.stamina_regen, COLOURS["black"], COLOURS["orange"], 100, 5)
-        # stamina_bar.draw(screen)
+
         self.player.update_health()
-        self.player.update_stamina()
         self.player.draw_bar(10, 200, self.player.health, self.player.max_health, COLOURS["black"], COLOURS["red"])
+        self.draw_health_text(30, 200)
+        
+        self.player.update_stamina()
         self.player.draw_bar(10, 215, self.player.stamina, self.player.max_stamina, COLOURS["black"], COLOURS["orange"])
-        self.draw_health_bar(self.player.health, 10, 200, screen)
-        self.draw_stamina_bar(self.player.stamina, 10, 215, screen)
-        # self.go_to_splashscreen()
+        self.draw_stamina_text(30, 215)
+        
         self.go_to_menu_screen()
+        self.go_to_stats_screen()
 
         self.debugger([
                         str("FPS: " + str(round(self.game.clock.get_fps(), 2))),

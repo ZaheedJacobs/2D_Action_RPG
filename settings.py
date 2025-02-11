@@ -17,7 +17,9 @@ INPUTS = {'escape': False,
           'q_press': False,
           'e_press': False,
           'r_press': False,
-          'm_press': False
+          'm_press': False,
+          'c_press': False,
+          'i_press': False
           }
 
 COLOURS = {"black": (0, 0, 0), 
