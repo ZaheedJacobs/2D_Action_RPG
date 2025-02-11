@@ -8,8 +8,6 @@ from tile import Tile
 from transition import Transition
 from pytmx.util_pygame import load_pygame
 from objects import Object, Wall, Collider
-from ui.bar import Bar
-from label import Label
 from ui.button import Button
 
 class State:
@@ -50,9 +48,10 @@ class MainMenu(SplashScreen):
     def __init__(self, game, current_scene = "0", entry_point = "0"):
         super().__init__(game, current_scene, entry_point)
         self.button_font = "assets/fonts/Almendra-Regular.ttf"
-        self.new_game_button = Button(160, 100, COLOURS["white"], COLOURS["black"], "New Game", self.button_font, 16)
-        self.continue_button = Button(160, 130, COLOURS["white"], COLOURS["black"], "Continue", self.button_font, 16)
-        self.quit_game_button = Button(160, 160, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
+        self.new_game_button = Button(160, 80, COLOURS["white"], COLOURS["black"], "New Game", self.button_font, 16)
+        self.continue_button = Button(160, 100, COLOURS["white"], COLOURS["black"], "Continue", self.button_font, 16)
+        self.help_button = Button(160, 120, COLOURS["white"], COLOURS["black"], "Help", self.button_font, 16)
+        self.quit_game_button = Button(160, 140, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
 
     def reset_player_stats(self):
         global player_stats
@@ -87,6 +86,10 @@ class MainMenu(SplashScreen):
         elif self.continue_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
             self.load_current_game()
 
+        elif self.help_button.is_pressed(mouse_pos, mouse_pressed):
+            HelpScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
+
         elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed):
             self.game.running = False
         
@@ -98,8 +101,29 @@ class MainMenu(SplashScreen):
         screen.fill(COLOURS["black"])
         self.game.render_text("Menu Screen", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/4))
         self.new_game_button.draw(screen)
-        self.quit_game_button.draw(screen)
         self.continue_button.draw(screen)
+        self.help_button.draw(screen)
+        self.quit_game_button.draw(screen)
+        
+
+class HelpScreen(SplashScreen):
+    def __init__(self, game, current_scene = "0", entry_point = "0"):
+        super().__init__(game, current_scene, entry_point)
+        self.button_font = "assets/fonts/Almendra-Regular.ttf"
+        self.back_button = Button(20, 200, COLOURS["white"], COLOURS["black"], "Back to Main Menu", self.button_font, 14)
+
+    def draw(self, screen):
+        screen.fill(COLOURS["black"])
+        self.game.render_text("Help Screen", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/4))
+        self.back_button.draw(screen)
+
+    def update(self, dt):
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_pressed = pygame.mouse.get_pressed()
+
+        if self.back_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
+            MainMenu(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
 
 class Scene(State):
     def __init__(self, game, current_scene, entry_point):
