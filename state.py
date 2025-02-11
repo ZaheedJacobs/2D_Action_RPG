@@ -1,13 +1,13 @@
 import pygame
 from settings import *
 from characters import NPC
-from player import Player, Attack
+from player import Player
 from camera import Camera
 from enemy import Enemy
 from tile import Tile
 from transition import Transition
 from pytmx.util_pygame import load_pygame
-from objects import Object, Wall, Collider
+from objects import Wall, Collider
 from ui.button import Button
 
 class State:
@@ -83,14 +83,14 @@ class MainMenu(SplashScreen):
         if self.new_game_button.is_pressed(mouse_pos, mouse_pressed):
             self.start_new_game()
         
-        elif self.continue_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
+        elif self.continue_button.is_pressed(mouse_pos, mouse_pressed):
             self.load_current_game()
 
         elif self.help_button.is_pressed(mouse_pos, mouse_pressed):
             HelpScreen(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
 
-        elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed):
+        elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
             self.game.running = False
         
         # if INPUTS["space"]:
@@ -112,9 +112,22 @@ class HelpScreen(SplashScreen):
         self.button_font = "assets/fonts/Almendra-Regular.ttf"
         self.back_button = Button(20, 200, COLOURS["white"], COLOURS["black"], "Back to Main Menu", self.button_font, 14)
 
+    def display_help_text(self, help_list):
+        for index, control in enumerate(help_list):
+            self.game.render_text(control, COLOURS["white"], self.game.font, (20, 20 * index), False)
+
     def draw(self, screen):
         screen.fill(COLOURS["black"])
-        self.game.render_text("Help Screen", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/4))
+        # self.game.render_text("Help Screen", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/4))
+        self.display_help_text([
+                                "Up-arrow/W -> Move up",
+                                "Down-arrow/S -> Move down",
+                                "Left-arrow/A -> Move Left",
+                                "Right-Arrow/D -> Move Right",
+                                "Left-click -> Attack"
+                                "Right-click -> Dash",
+                                "Escape key -> Open Main menu/Exit menu"
+                            ])
         self.back_button.draw(screen)
 
     def update(self, dt):
