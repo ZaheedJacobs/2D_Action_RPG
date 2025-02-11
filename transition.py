@@ -21,3 +21,15 @@ class Transition:
         self.fade_surf.fill(COLOURS["black"])
         self.fade_surf.set_alpha(self.alpha)
         screen.blit(self.fade_surf, (0,0))
+
+class MenuTransition(Transition):
+    def __init__(self, scene):
+        super().__init__(scene)
+
+    def update(self, dt):
+        if self.exiting:
+            self.alpha = min(255, self.alpha + self.fade_speed * dt)
+            if self.alpha >= 255:
+                self.exiting = False
+        else:
+            self.alpha = max(0, self.alpha - self.fade_speed * dt)

@@ -102,7 +102,6 @@ class Player(Entity):
             self.health += self.health_regen
 
         self.stats["Health"] = self.health
-
     
     def update_stamina(self):
         if self.stamina >= self.max_stamina:

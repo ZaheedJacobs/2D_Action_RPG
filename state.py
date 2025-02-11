@@ -5,7 +5,7 @@ from player import Player
 from camera import Camera
 from enemy import Enemy
 from tile import Tile
-from transition import Transition
+from transition import Transition, MenuTransition
 from pytmx.util_pygame import load_pygame
 from objects import Wall, Collider
 from ui.button import Button
@@ -53,6 +53,8 @@ class MainMenu(SplashScreen):
         self.help_button = Button(160, 120, COLOURS["white"], COLOURS["black"], "Help", self.button_font, 16)
         self.quit_game_button = Button(160, 140, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
 
+        self.transition = MenuTransition(self)
+
     def reset_player_stats(self):
         global player_stats
         # new_stats = {}
@@ -75,8 +77,8 @@ class MainMenu(SplashScreen):
         else:
             Scene(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
-
-    def update(self, dt):
+    
+    def check_button_press(self):
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()
         
@@ -87,37 +89,44 @@ class MainMenu(SplashScreen):
             self.load_current_game()
 
         elif self.help_button.is_pressed(mouse_pos, mouse_pressed):
+            self.transition.exiting = True
             HelpScreen(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
 
         elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
             self.game.running = False
+
+    def update(self, dt):
+        self.check_button_press()
+        self.transition.update(dt)
         
         # if INPUTS["space"]:
         #     Scene(self.game, self.current_scene, self.entry_point).enter_state()
         #     self.game.reset_inputs()
 
     def draw(self, screen):
-        screen.fill(COLOURS["black"])
+        screen.fill(COLOURS["blue"])
         self.game.render_text("Menu Screen", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/4))
         self.new_game_button.draw(screen)
         self.continue_button.draw(screen)
         self.help_button.draw(screen)
         self.quit_game_button.draw(screen)
+        self.transition.draw(screen)
         
-
 class HelpScreen(SplashScreen):
     def __init__(self, game, current_scene = "0", entry_point = "0"):
         super().__init__(game, current_scene, entry_point)
         self.button_font = "assets/fonts/Almendra-Regular.ttf"
         self.back_button = Button(20, 200, COLOURS["white"], COLOURS["black"], "Back to Main Menu", self.button_font, 14)
 
+        self.transition = MenuTransition(self)
+
     def display_help_text(self, help_list):
         for index, control in enumerate(help_list):
             self.game.render_text(control, COLOURS["white"], self.game.font, (20, 20 * index), False)
 
     def draw(self, screen):
-        screen.fill(COLOURS["black"])
+        screen.fill(COLOURS["blue"])
         # self.game.render_text("Help Screen", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/4))
         self.display_help_text([
                                 "Up-arrow/W -> Move up",
@@ -129,14 +138,20 @@ class HelpScreen(SplashScreen):
                                 "Escape key -> Open Main menu/Exit menu"
                             ])
         self.back_button.draw(screen)
+        self.transition.draw(screen)
 
-    def update(self, dt):
+    def check_button_press(self):
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()
 
         if self.back_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
+            self.transition.exiting = True
             MainMenu(self.game, self.current_scene, self.entry_point).enter_state()
             self.game.reset_inputs()
+
+    def update(self, dt):
+        self.check_button_press()
+        self.transition.update(dt)
 
 class Scene(State):
     def __init__(self, game, current_scene, entry_point):
@@ -236,7 +251,6 @@ class Scene(State):
                     self.npc = NPC(self.game, self, [self.update_sprites, self.drawn_sprites, self.npc_sprites], (obj.x, obj.y), "blocks" , obj.name, "right")
                 if "enemy" in obj.name:
                     self.npc = Enemy(self.game, self, [self.update_sprites, self.drawn_sprites, self.enemy_sprites], (obj.x, obj.y), "blocks" , obj.name, "right")
-
 
     def debugger(self, debug_list):
         for index, name in enumerate(debug_list):
