@@ -13,8 +13,8 @@ class Game:
         self.FPS = 60
 
         self.states = []
-        self.splash_screen = SplashScreen(self)
-        self.states.append(self.splash_screen)
+        self.menu_screen = MainMenu(self)
+        self.states.append(self.menu_screen)
     
     def render_text(self, text, colour, font, pos, centralised = True):
         surf = font.render(str(text), False, colour)

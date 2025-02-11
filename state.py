@@ -50,9 +50,9 @@ class MainMenu(SplashScreen):
     def __init__(self, game, current_scene = "0", entry_point = "0"):
         super().__init__(game, current_scene, entry_point)
         self.button_font = "assets/fonts/Almendra-Regular.ttf"
-        self.new_game_button = Button(160, 100, 20, 20, COLOURS["white"], COLOURS["black"], "New Game", self.button_font, 16)
-        self.continue_button = Button(160, 130, 20, 20, COLOURS["white"], COLOURS["black"], "Continue", self.button_font, 16)
-        self.quit_game_button = Button(160, 160, 20, 20, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
+        self.new_game_button = Button(160, 100, 70, 20, COLOURS["white"], COLOURS["black"], "New Game", self.button_font, 16)
+        self.continue_button = Button(160, 130, 70, 20, COLOURS["white"], COLOURS["black"], "Continue", self.button_font, 16)
+        self.quit_game_button = Button(160, 160, 70, 20, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
 
     def reset_player_stats(self):
         global player_stats
@@ -63,20 +63,29 @@ class MainMenu(SplashScreen):
 
         player_stats["Level"] = 1
 
+    def start_new_game(self):
+        self.current_scene = "0"
+        self.entry_point = "0"
+        self.reset_player_stats()
+        Scene(self.game, self.current_scene, self.entry_point).enter_state()
+        self.game.reset_inputs()
+
+    def load_current_game(self):
+        if (player_stats["x-pos"] == 0 and player_stats["y-pos"] == 0):
+            self.start_new_game()
+        else:
+            Scene(self.game, self.current_scene, self.entry_point).enter_state()
+            self.game.reset_inputs()
+
     def update(self, dt):
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()
         
         if self.new_game_button.is_pressed(mouse_pos, mouse_pressed):
-            self.current_scene = "0"
-            self.entry_point = "0"
-            self.reset_player_stats()
-            Scene(self.game, self.current_scene, self.entry_point).enter_state()
-            self.game.reset_inputs()
+            self.start_new_game()
         
         elif self.continue_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
-            Scene(self.game, self.current_scene, self.entry_point).enter_state()
-            self.game.reset_inputs()
+            self.load_current_game()
 
         elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed):
             self.game.running = False
@@ -214,7 +223,7 @@ class Scene(State):
         self.player.draw_bar(10, 215, self.player.stamina, self.player.max_stamina, COLOURS["black"], COLOURS["orange"])
         self.draw_health_bar(self.player.health, 10, 200, screen)
         self.draw_stamina_bar(self.player.stamina, 10, 215, screen)
-        self.go_to_splashscreen()
+        # self.go_to_splashscreen()
         self.go_to_menu_screen()
 
         self.debugger([
