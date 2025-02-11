@@ -50,9 +50,9 @@ class MainMenu(SplashScreen):
     def __init__(self, game, current_scene = "0", entry_point = "0"):
         super().__init__(game, current_scene, entry_point)
         self.button_font = "assets/fonts/Almendra-Regular.ttf"
-        self.new_game_button = Button(160, 100, 70, 20, COLOURS["white"], COLOURS["black"], "New Game", self.button_font, 16)
-        self.continue_button = Button(160, 130, 70, 20, COLOURS["white"], COLOURS["black"], "Continue", self.button_font, 16)
-        self.quit_game_button = Button(160, 160, 70, 20, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
+        self.new_game_button = Button(160, 100, COLOURS["white"], COLOURS["black"], "New Game", self.button_font, 16)
+        self.continue_button = Button(160, 130, COLOURS["white"], COLOURS["black"], "Continue", self.button_font, 16)
+        self.quit_game_button = Button(160, 160, COLOURS["white"], COLOURS["black"], "Quit Game", self.button_font, 16)
 
     def reset_player_stats(self):
         global player_stats
