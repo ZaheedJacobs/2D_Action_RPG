@@ -3,6 +3,8 @@ from pygame.math import Vector2 as vec
 WIDTH, HEIGHT  = 400, 224
 TILESIZE = 16
 FONT = "assets/fonts/LexendExa-Regular.ttf"
+BUTTON_FONT = "assets/fonts/Almendra-Regular.ttf"
+BUTTON_SIZE = 16
 
 INPUTS = {'escape': False, 
           'space': False, 
