@@ -1,6 +1,6 @@
 import pygame
 from settings import *
-from characters import Entity
+from characters import Entity, Hit
 from effect import AttackEffect
 
 class Player(Entity):
@@ -10,10 +10,7 @@ class Player(Entity):
         self.state = Idle(self)
         # self.image = self.animations[f"idle_{map_data["player_direction"]}"][self.frame_index]
         self.bar_width = 100
-        self.health = 100
-        self.max_health = 100
-        self.stamina = 100
-        self.max_stamina = 100
+        
         self.health_regen = 0.01
         self.stamina_regen = 0.05
         self.damage = 25
@@ -21,11 +18,26 @@ class Player(Entity):
         self.is_alive = True
         self.change_speed = 10
         
-        self.stats = player_stats
+        self.stats = {"Health": 100,
+                "Stamina": 100,
+                "Damage": 25,
+                "Level": 1,
+                "EXP": 0,
+                "EXP for next lvl": 100,
+                "Strength": 0,
+                "Dexterity": 0,
+                "Agility": 0,
+                "Intellect": 0,
+                "Vitality": 0
+            }
+        self.health = self.stats["Health"]
+        self.max_health = self.stats["Health"]
+        self.stamina = self.stats["Stamina"]
+        self.max_stamina = self.stats["Stamina"]
         self.equipment = equipment
         self.inventory = inventory
 
-        self.setup_stats()
+        # self.setup_stats()
 
     def setup_stats(self):
         self.stats["Health"] = self.health
@@ -36,22 +48,22 @@ class Player(Entity):
         if INPUTS["left"]: self.acc.x = -self.force
         elif INPUTS["right"]: self.acc.x = self.force
         else: self.acc.x = 0
-        player_coordinates["x-pos"] = self.rect.centerx
+        player_coordinates["x-pos"] = self.hitbox.centerx
         
         if INPUTS["up"]: self.acc.y = -self.force
         elif INPUTS["down"]: self.acc.y = self.force
         else: self.acc.y = 0
-        player_coordinates["y-pos"] = self.rect.centery
+        player_coordinates["y-pos"] = self.hitbox.centery
 
     def vec_to_mouse(self, speed):
-        direction = vec(pygame.mouse.get_pos()) - (vec(self.rect.center) - vec(self.scene.camera.offset))
+        direction = vec(pygame.mouse.get_pos()) - (vec(self.hitbox.center) - vec(self.scene.camera.offset))
         if direction.length() > 0: direction.normalize_ip()
         return direction * speed
 
     def draw_bar(self, x_coord, y_coord, current_resource, max_resource, color1, color2):
         # transition_width = 0
         # transition_color = color2
-        bar_ratio = max_resource//self.bar_width
+        bar_ratio = max_resource/self.bar_width
         
         # if current_resource < target_resource:
         #     current_resource += self.change_speed
@@ -65,7 +77,7 @@ class Player(Entity):
         # filled = self.amount / self.ratio
         # if (target_resource/bar_ratio) + transition_width >= self.bar_width:
         #     transition_width = self.bar_width - (target_resource/bar_ratio)
-        normal_bar_rect = pygame.Rect(x_coord, y_coord, current_resource/bar_ratio, 5)
+        normal_bar_rect = pygame.Rect(x_coord, y_coord, current_resource *bar_ratio, 5)
         # transition_bar_rect = pygame.Rect(normal_bar_rect.right, y_coord, transition_width, 5)
         
         # Draw background first
@@ -114,13 +126,14 @@ class Player(Entity):
     def on_death(self):
         if self.health <= 0:
             self.is_alive = False
+            # self.state = Death(self)
 
     # def change_weapon_type(self):
-    #     if INPUTS["q_switch"] or INPUTS["e_switch"]:
+    #     if INPUTS["q_press"] or INPUTS["e_press"]:
     #         if self.weapon_type == "dual": 
     #             self.weapon_type = "single"
     #             return
-    #         elif self.weapon_type == "single": 
+    #         if self.weapon_type == "single": 
     #             self.weapon_type = "dual"
     #             return
 
@@ -150,10 +163,11 @@ class Player(Entity):
             collidable_enemies = self.get_collide_list(self.scene.enemy_sprites)
             if len(collidable_enemies) != 0:
                 for sprite in collidable_enemies:
-                    if self.rect.colliderect(sprite.rect):
-                        if self.mask.overlap_mask(sprite.mask, (sprite.pos[0] - self.pos[0], sprite.pos[1] - self.pos[1])):
-                            sprite.health -= self.damage
-                            sprite.state = Hit()
+                    if self.scene.attack_sprites.rect.colliderect(sprite.rect):
+                        if self.scene.attack_sprites.mask.overlap_mask(sprite.mask, (sprite.pos[0] - self.pos[0], sprite.pos[1] - self.pos[1])):
+                            if sprite.vulnerable:
+                                sprite.health -= self.damage
+                                sprite.state = Hit()
         
     def exit_scene(self):
         for exit in self.scene.exit_sprites:
@@ -195,6 +209,7 @@ class Idle:
 
     def __str__(self):
         return "Idle"
+
 class Run:
     def __init__(self, player):
         Idle.__init__(self, player)
@@ -216,8 +231,10 @@ class Run:
         player.animate(f"run_{player.get_direction()}", 15 * dt)
         player.movement()
         player.physics(dt, player.frict)
+    
     def __str__(self):
         return "Run"
+
 class Dash:
     def __init__(self, player):
         Idle.__init__(self, player)
@@ -226,6 +243,7 @@ class Dash:
         self.dash_pending = False
         self.vel = player.vec_to_mouse(200)
         player.stamina -= 10
+        player.vulnerable = False
 
     def enter_state(self, player):
         if INPUTS["right_click"]:
@@ -233,6 +251,7 @@ class Dash:
         if self.timer <= 0:
             if self.dash_pending and player.stamina >= 10:
                 return Dash(player)
+            player.vulnerable = True
             return Idle(player)
 
     def update(self, player, dt):
@@ -245,6 +264,7 @@ class Dash:
 
     def __str__(self):
         return "Dash"
+
 class Attack:
     def __init__(self, player, surface):
         Idle.__init__(self, player)
@@ -254,22 +274,25 @@ class Attack:
         self.vel = player.vec_to_mouse(10)
         self.surface = surface
         
-        self.attack_direction = player.get_direction()
-        if self.attack_direction == "left":
-            x_pos = player.rect.x - TILESIZE
-            y_pos = player.rect.y
-        elif self.attack_direction == "right":
-            x_pos = player.rect.x
-            y_pos = player.rect.y
-        elif self.attack_direction == "up":
-            x_pos = player.rect.x
-            y_pos = player.rect.y - (TILESIZE * 1.5)
-        elif self.attack_direction == "down":
-            x_pos = player.rect.x
-            y_pos = player.rect.y
+        # self.attack_direction = player.get_direction()
+        if map_data["player_direction"] == "left":
+            x_pos = player.hitbox.centerx - (TILESIZE // 2)
+            y_pos = player.hitbox.centery
+        if map_data["player_direction"] == "right":
+            x_pos = player.hitbox.centerx + (TILESIZE // 2)
+            y_pos = player.hitbox.centery
+        if map_data["player_direction"] == "up":
+            x_pos = player.hitbox.centerx
+            y_pos = player.hitbox.centery - (TILESIZE // 2)
+        if map_data["player_direction"] == "down":
+            x_pos = player.hitbox.centerx
+            y_pos = player.hitbox.centery + (TILESIZE // 2)
         
         self.attack_effect = AttackEffect(player.game, x_pos, y_pos, 
-                                          [player.scene.update_sprites, player.scene.drawn_sprites], player, player.layer)
+                                          [player.scene.update_sprites, 
+                                           player.scene.drawn_sprites, 
+                                           player.scene.attack_sprites], 
+                                          player, player.layer)
 
     def enter_state(self, player):
         if INPUTS["left_click"]:
@@ -281,7 +304,7 @@ class Attack:
 
     def update(self, player, dt):
         self.timer -= dt
-        player.animate(f"attack_{self.attack_direction}", 15 * dt, False)
+        player.animate(f"attack_{map_data["player_direction"]}", 15 * dt, False)
         self.attack_effect.collision(player.scene.enemy_sprites)
         # self.attack_effect.animate(f"attack_effect_{self.attack_direction}", 15 * dt, False)
 
@@ -292,23 +315,19 @@ class Attack:
     def __str__(self):
         return "Attack"
 
-class Hit:
+class Death:
     def __init__(self, player):
         Idle.__init__(self, player)
         self.timer = 0.25
 
     def enter_state(self, player):
         if self.timer <= 0:
-            return Idle(player)
+            pass
 
     def update(self, player, dt):
         self.timer -= dt
-        player.animate(f"hit_{player.get_direction()}", 15 * dt, False)
+        player.animate("death", 15 * dt, False)
 
     def __str__(self):
-        return "Hit"
-
-class Death:
-    def __init__(self, player):
-        Idle.__init__(self, player)
+        return "Death"
         

@@ -1,5 +1,6 @@
 import pygame
 from settings import *
+from math import sin
 
 class Entity(pygame.sprite.Sprite):
     def __init__(self, game, scene, group, pos, layer, name, direction):
@@ -23,7 +24,16 @@ class Entity(pygame.sprite.Sprite):
         self.frict = -15
         self.move = {"left": False, "right": False, "up": False, "down": False}
         self.state = Idle(self)
-        
+
+        self.vulnerable = True
+
+    def wave_value(self):
+        value = sin(pygame.time.get_ticks())
+        if value >= 0:
+            return 255
+        else:
+            return 0
+
     def import_images(self, path):
         self.animations = self.game.get_animations(path)
 
@@ -32,15 +42,23 @@ class Entity(pygame.sprite.Sprite):
             self.animations[animation] = self.game.get_images(full_path)
 
     def animate(self, state, fps, loop = True):
-        self.frame_index += fps
+        if state != "hit":
+            self.frame_index += fps
 
-        if self.frame_index >= len(self.animations[state]) - 1:
-            if loop:
-                self.frame_index = 0
+            if self.frame_index >= len(self.animations[state]) - 1:
+                if loop:
+                    self.frame_index = 0
+                else:
+                    self.frame_index = len(self.animations[state]) - 1
+            
+            self.image = self.animations[state][int(self.frame_index)]
+            self.rect = self.image.get_rect(center = self.hitbox.center)
+        else:
+            if not self.vulnerable and self.state == Hit:
+                alpha = self.wave_value()
+                self.image.set_alpha(alpha)
             else:
-                self.frame_index = len(self.animations[state]) - 1
-        
-        self.image = self.animations[state][int(self.frame_index)]
+                self.image.set_alpha(255)
 
     def get_direction(self):
         angle = self.vel.angle_to(vec(0, 1))
@@ -137,3 +155,24 @@ class Run:
         character.movement()
         character.physics(dt, character.frict)
 
+class Hit:
+    def __init__(self, character):
+        Idle.__init__(self, character)
+        self.timer = 0.25
+        character.vulnerable = False
+
+    def enter_state(self, character):
+        if self.timer <= 0:
+            character.vulnerable = True
+            return Idle(character)
+
+    def update(self, character, dt):
+        self.timer -= dt
+        character.animate(f"hit", 15 * dt, False)
+
+        character.physics(dt, 1)
+        character.acc = vec()
+        character.vel = vec()
+
+    def __str__(self):
+        return "Hit"

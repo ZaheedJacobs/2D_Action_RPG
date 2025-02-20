@@ -1,4 +1,5 @@
 import pygame
+from characters import Hit
 
 # effects = []
 
@@ -61,7 +62,7 @@ class AttackEffect(Effect):
         self.character = character
         self.import_images(f"assets/effects/attack/")
         self.image = self.animations[f"attack_effect_{self.character.get_direction()}"][self.frame_index]
-        self.rect = self.image.get_rect(topleft = (self.x, self.y))
+        self.rect = self.image.get_rect(center = (self.x, self.y))
         self.mask = pygame.mask.from_surface(self.image)
         self.timer = 0.5
 
@@ -74,8 +75,9 @@ class AttackEffect(Effect):
         for sprite in self.get_collide_list(group):
             if self.rect.colliderect(sprite.rect):
                 if self.mask.overlap_mask(sprite.mask, (sprite.pos[0] - self.x, sprite.pos[1] - self.y)):
-                    sprite.health -= self.character.damage
-        return
+                    if sprite.vulnerable:
+                        sprite.health -= self.character.damage
+                        sprite.state = Hit()
 
     def update(self, dt):
         if self.timer <= 0:

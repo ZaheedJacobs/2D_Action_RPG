@@ -34,6 +34,7 @@ class SplashScreen(State):
         super().__init__(game)
         self.current_scene = current_scene
         self.entry_point = entry_point
+        self.transition = MenuTransition(self)
     
     def update(self, dt):
         if INPUTS["space"]:
@@ -45,15 +46,13 @@ class SplashScreen(State):
         self.game.render_text("Splash Screen, press space", COLOURS["white"], self.game.font, (WIDTH/2, HEIGHT/2))
 
 class MainMenu(SplashScreen):
-    def __init__(self, game, current_scene = "0", entry_point = "0"):
+    def __init__(self, game, current_scene = "0", entry_point = "0", scene = None):
         super().__init__(game, current_scene, entry_point)
-        # self.button_font = "assets/fonts/Almendra-Regular.ttf"
+        self.scene = scene
         self.new_game_button = Button(160, 80, COLOURS["white"], COLOURS["black"], "New Game", BUTTON_FONT, BUTTON_SIZE)
         self.continue_button = Button(160, 100, COLOURS["white"], COLOURS["black"], "Continue", BUTTON_FONT, BUTTON_SIZE)
         self.help_button = Button(160, 120, COLOURS["white"], COLOURS["black"], "Help", BUTTON_FONT, BUTTON_SIZE)
         self.quit_game_button = Button(160, 140, COLOURS["white"], COLOURS["black"], "Quit Game", BUTTON_FONT, BUTTON_SIZE)
-
-        self.transition = MenuTransition(self)
 
     def reset_player_stats(self):
         global player_stats
@@ -93,7 +92,7 @@ class MainMenu(SplashScreen):
 
         elif self.help_button.is_pressed(mouse_pos, mouse_pressed):
             self.transition.exiting = True
-            HelpScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            HelpScreen(self.game, self.current_scene, self.entry_point, self.scene).enter_state()
             self.game.reset_inputs()
 
         elif self.quit_game_button.is_pressed(mouse_pos, mouse_pressed):
@@ -113,11 +112,10 @@ class MainMenu(SplashScreen):
         self.transition.draw(screen)
         
 class HelpScreen(SplashScreen):
-    def __init__(self, game, current_scene = "0", entry_point = "0"):
+    def __init__(self, game, current_scene = "0", entry_point = "0", scene = None):
         super().__init__(game, current_scene, entry_point)
+        self.scene = scene
         self.back_button = Button(20, 200, COLOURS["white"], COLOURS["black"], "Back to Main Menu", BUTTON_FONT, BUTTON_SIZE)
-
-        self.transition = MenuTransition(self)
 
     def display_help_text(self, help_list):
         for index, control in enumerate(help_list):
@@ -146,7 +144,7 @@ class HelpScreen(SplashScreen):
 
         if self.back_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["escape"]:
             self.transition.exiting = True
-            MainMenu(self.game, self.current_scene, self.entry_point).enter_state()
+            MainMenu(self.game, self.current_scene, self.entry_point, self.scene).enter_state()
             self.game.reset_inputs()
 
     def update(self, dt):
@@ -154,12 +152,11 @@ class HelpScreen(SplashScreen):
         self.transition.update(dt)
 
 class StatScreen(SplashScreen):
-    def __init__(self, game, current_scene="0", entry_point="0"):
+    def __init__(self, game, current_scene="0", entry_point="0", scene = None):
         super().__init__(game, current_scene, entry_point)
-        # self.button_font = "assets/fonts/Almendra-Regular.ttf"
-        self.transition = MenuTransition(self)
         self.inventory_button = Button(170, 200, COLOURS["white"], COLOURS["black"], "Inventory", BUTTON_FONT, BUTTON_SIZE)
-
+        self.scene = scene
+    
     def check_button_press(self):
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()
@@ -169,12 +166,12 @@ class StatScreen(SplashScreen):
             self.game.reset_inputs()
         
         if INPUTS["i_press"] or self.inventory_button.is_pressed(mouse_pos, mouse_pressed):
-            InventoryScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            InventoryScreen(self.game, self.current_scene, self.entry_point, self.scene).enter_state()
             self.game.reset_inputs()
 
     def show_stats(self):
         index = 0
-        for stat, num in player_stats.items():
+        for stat, num in self.scene.player.stats.items():
             self.game.render_text(f"{stat}: {num}", COLOURS["white"], self.game.font, (15, 15 +(15 * index)), False)
             index += 1
 
@@ -182,7 +179,7 @@ class StatScreen(SplashScreen):
         screen.fill(COLOURS["blue"])
         self.game.render_text("Stats", COLOURS["white"], self.game.font, (200, 5))
         self.transition.draw(screen)
-        if self.transition.exiting == False:
+        if not self.transition.exiting:
             self.show_stats()
         self.inventory_button.draw(screen)
         
@@ -191,10 +188,9 @@ class StatScreen(SplashScreen):
         self.transition.update(dt)
 
 class InventoryScreen(SplashScreen):
-    def __init__(self, game, current_scene="0", entry_point="0"):
+    def __init__(self, game, current_scene="0", entry_point="0", scene = None):
         super().__init__(game, current_scene, entry_point)
-
-        self.transition = MenuTransition(self)
+        self.scene = scene
         self.stats_button = Button(15, 200, COLOURS["white"], COLOURS["black"], "Stats", BUTTON_FONT, BUTTON_SIZE)
 
     def check_button_press(self):
@@ -205,7 +201,7 @@ class InventoryScreen(SplashScreen):
             self.game.reset_inputs()
         
         if self.stats_button.is_pressed(mouse_pos, mouse_pressed) or INPUTS["c_press"]:
-            StatScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            StatScreen(self.game, self.current_scene, self.entry_point, self.scene).enter_state()
             self.game.reset_inputs()
 
     def draw(self, screen):
@@ -238,6 +234,7 @@ class Scene(State):
         self.npc_sprites = pygame.sprite.Group()
         self.exit_sprites = pygame.sprite.Group()
         self.player_sprites = pygame.sprite.Group()
+        self.attack_sprites = pygame.sprite.Group()
 
         self.tmx_data = load_pygame(f"scenes/{self.current_scene}/{self.current_scene}.tmx")
 
@@ -260,19 +257,19 @@ class Scene(State):
     def go_to_menu_screen(self):
         if INPUTS["escape"]:
             self.stop_player()
-            MainMenu(self.game, map_data["scene_num"], map_data["entry_point_num"]).enter_state()
+            MainMenu(self.game, map_data["scene_num"], map_data["entry_point_num"], self).enter_state()
             self.game.reset_inputs()
 
     def go_to_stats_screen(self):
         if INPUTS["c_press"]:
             self.stop_player()
-            StatScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            StatScreen(self.game, self.current_scene, self.entry_point, self).enter_state()
             self.game.reset_inputs()
 
     def go_to_inventory_screen(self):
         if INPUTS["i_press"]:
             self.stop_player()
-            InventoryScreen(self.game, self.current_scene, self.entry_point).enter_state()
+            InventoryScreen(self.game, self.current_scene, self.entry_point, self).enter_state()
             self.game.reset_inputs()
 
     def draw_health_text(self, x = 30, y = 0):
@@ -305,7 +302,15 @@ class Scene(State):
                     else:
                         self.pos = (obj.x, obj.y)
                     # self.player_direction = player_stats["direction"]
-                    self.player = Player(self.game, self, [self.update_sprites, self.drawn_sprites, self.player_sprites], self.pos, "blocks" ,"player", map_data["player_direction"])
+                    self.player = Player(self.game, 
+                                        self, 
+                                        [self.update_sprites, 
+                                        self.drawn_sprites,
+                                        self.player_sprites], 
+                                        self.pos, 
+                                        "blocks" ,
+                                        "player", 
+                                        map_data["player_direction"])
                     self.target = self.player
                     
                     self.camera.offset = vec(self.player.rect.centerx - WIDTH/2, self.player.rect.centery - HEIGHT/2)
@@ -317,9 +322,13 @@ class Scene(State):
         if "entities" in layers:
             for obj in self.tmx_data.get_layer_by_name("entities"):
                 if "npc" in obj.name:
-                    self.npc = NPC(self.game, self, [self.update_sprites, self.drawn_sprites, self.npc_sprites], (obj.x, obj.y), "blocks" , obj.name, "right")
+                    self.npc = NPC(self.game, self, 
+                                   [self.update_sprites, self.drawn_sprites, self.npc_sprites], 
+                                   (obj.x, obj.y), "blocks" , obj.name, "right")
                 if "enemy" in obj.name:
-                    self.npc = Enemy(self.game, self, [self.update_sprites, self.drawn_sprites, self.enemy_sprites], (obj.x, obj.y), "blocks" , obj.name, "right")
+                    self.npc = Enemy(self.game, self, 
+                                    [self.update_sprites, self.drawn_sprites, self.enemy_sprites], 
+                                    (obj.x, obj.y), "blocks" , obj.name, "right")
 
     def debugger(self, debug_list):
         for index, name in enumerate(debug_list):
@@ -349,6 +358,5 @@ class Scene(State):
         self.debugger([
                         str("FPS: " + str(round(self.game.clock.get_fps(), 2))),
                         str("Velocity: " + str(round(self.player.vel, 2))),
-                        "Position: " + str((player_coordinates["x-pos"], player_coordinates["y-pos"])),
-                        "Direction: " + map_data["player_direction"]
+                        "Vulnerable: " + str(self.player.vulnerable)
         ])

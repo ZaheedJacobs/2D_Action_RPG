@@ -1,6 +1,6 @@
 import pygame
 from settings import *
-from characters import Entity
+from characters import Entity, Hit
 from math_extras import distance
 
 class Enemy(Entity):
@@ -27,8 +27,9 @@ class Enemy(Entity):
                 for sprite in collidable_enemies:
                     if self.rect.colliderect(sprite.rect):
                         if self.mask.overlap_mask(sprite.mask, (sprite.pos[0] - self.pos[0], sprite.pos[1] - self.pos[1])):
-                            sprite.target_health -= self.damage
-                            sprite.state = Hit()
+                            if sprite.vulnerable:
+                                sprite.target_health -= self.damage
+                                sprite.state = Hit()
 
     def setup_stats(self):
         self.stats["Health"] = self.health
@@ -51,6 +52,7 @@ class Enemy(Entity):
         self.update_health()
         self.on_death()
         self.state.update(self, dt)
+
 class Idle:
     def __init__(self, character):
         character.frame_index = 0
@@ -92,17 +94,17 @@ class Attack:
 
         character.physics(dt, character.frict)
         character.acc = vec()
-        character.vel = self.vel
+        character.vel = vec()
 
-class Hit:
+class Death:
     def __init__(self, character):
         Idle.__init__(self, character)
-        self.timer = 0.25
+        self.timer = 0.15
 
     def enter_state(self, character):
         if self.timer <= 0:
-            return Idle(character)
+            character.kill()
 
     def update(self, character, dt):
         self.timer -= dt
-        character.animate(f"hit_{character.get_direction()}", 15 * dt, False)
+        character.animate("death", 15 * dt, False)
